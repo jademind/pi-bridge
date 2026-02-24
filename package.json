@@ -1,0 +1,45 @@
+{
+  "name": "@jademind/pi-bridge",
+  "version": "0.1.0",
+  "description": "Minimal secure inbox bridge for Pi: reliable queued/steering message delivery to running sessions.",
+  "keywords": [
+    "pi-package",
+    "pi",
+    "pi-coding-agent",
+    "bridge",
+    "messaging",
+    "statusbar",
+    "ios"
+  ],
+  "license": "MIT",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jademind/pi-bridge.git"
+  },
+  "homepage": "https://github.com/jademind/pi-bridge#readme",
+  "bugs": {
+    "url": "https://github.com/jademind/pi-bridge/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "files": [
+    "extensions",
+    "lib",
+    "test",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "pi": {
+    "extensions": [
+      "./extensions"
+    ]
+  },
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*"
+  }
+}
