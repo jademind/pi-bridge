@@ -1,5 +1,7 @@
 # @jademind/pi-bridge
 
+> Package scope: use `@jademind/pi-bridge` (scoped). Older unscoped naming should be considered deprecated.
+
 Minimal secure inbox bridge for Pi sessions.
 
 `@jademind/pi-bridge` is designed for status bar and mobile clients that must send messages reliably to running Pi agents, including plain terminal sessions where tty injection is unreliable.
@@ -113,6 +115,13 @@ Possible statuses:
 npm test
 npm pack --dry-run
 ```
+
+## OSS best practices
+
+- Keep bridge inbox/ack directories user-local (`~/.pi/agent/statusbridge`) and avoid world-writable permissions.
+- Treat all inbox payloads as untrusted: validate PID, TTL, size, and path constraints before delivery.
+- Keep rate limits enabled (normal + interrupt) to protect active sessions from spam and accidental loops.
+- When changing envelope/ack schema, bump docs with explicit compatibility notes.
 
 ## License
 
