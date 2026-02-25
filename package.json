@@ -1,6 +1,6 @@
 {
   "name": "@jademind/pi-bridge",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Minimal secure inbox bridge for Pi: reliable queued/steering message delivery to running sessions.",
   "keywords": [
     "pi-package",

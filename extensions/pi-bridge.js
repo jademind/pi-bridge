@@ -152,7 +152,7 @@ export default function (pi) {
 
     const limiter = delivery.mode === "interrupt" ? interruptLimiter : normalLimiter;
     if (!limiter.allow(1)) {
-      return { ok: false, error: "rate_limited", delivery };
+      return { ok: false, error: "bridge_rate_limited", delivery };
     }
 
     try {
@@ -163,7 +163,13 @@ export default function (pi) {
       }
       return { ok: true, delivery };
     } catch (error) {
-      return { ok: false, error: error instanceof Error ? error.message : "send_failed", delivery };
+      const raw = error instanceof Error ? error.message : "send_failed";
+      const lower = String(raw || "").toLowerCase();
+      if (lower.includes("rate") && lower.includes("limit")) {
+        limiter.refund?.(1);
+        return { ok: false, error: "pi_rate_limited", delivery };
+      }
+      return { ok: false, error: raw, delivery };
     }
   }
 
