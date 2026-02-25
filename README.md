@@ -14,7 +14,6 @@ It is primarily consumed by the free open-source macOS app [`pi-statusbar`](http
 
 - [`pi-statusbar`](https://github.com/jademind/pi-statusbar): macOS menu bar app for Pi (daemon + UI)
 - [`@jademind/pi-telemetry`](https://github.com/jademind/pi-telemetry): per-process telemetry heartbeat + snapshot CLI
-- [`@jademind/pi-visual`](https://github.com/jademind/pi-visual): visual/session integration package
 
 ## What it does
 
