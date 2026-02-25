@@ -7,6 +7,13 @@ import { makeTokenBucket, normalizeDelivery, safeChildPath, validateEnvelope } f
 const MAX_FILE_BYTES = 32 * 1024;
 const PROCESSED_CACHE_MAX = 1024;
 
+const MIN_MAX_TEXT = 256;
+const MIN_QUEUE_DEPTH = 8;
+const MIN_RATE_PER_MIN = 20;
+const MIN_RATE_BURST = 4;
+const MIN_INTERRUPT_RATE_PER_MIN = 20;
+const MIN_INTERRUPT_RATE_BURST = 4;
+
 function envNumber(name, fallback, min = 1) {
   const parsed = Number(process.env[name] ?? "");
   if (!Number.isFinite(parsed)) return fallback;
@@ -49,15 +56,15 @@ export default function (pi) {
   const processingDir = path.join(processingRoot, pidStr);
   const registryFile = path.join(registryDir, `${pidStr}.json`);
 
-  const maxTextLength = envNumber("PI_BRIDGE_MAX_TEXT", 4000, 32);
+  const maxTextLength = envNumber("PI_BRIDGE_MAX_TEXT", 4000, MIN_MAX_TEXT);
   const maxSkewMs = envNumber("PI_BRIDGE_MAX_SKEW_MS", 120000, 1000);
   const heartbeatMs = envNumber("PI_BRIDGE_HEARTBEAT_MS", 2000, 250);
   const scanMs = envNumber("PI_BRIDGE_SCAN_MS", 750, 100);
-  const refillPerMinute = envNumber("PI_BRIDGE_RATE_PER_MIN", 12, 1);
-  const burst = envNumber("PI_BRIDGE_RATE_BURST", 4, 1);
-  const refillInterruptPerMinute = envNumber("PI_BRIDGE_INTERRUPT_RATE_PER_MIN", 4, 1);
-  const burstInterrupt = envNumber("PI_BRIDGE_INTERRUPT_RATE_BURST", 2, 1);
-  const queueDepthLimit = envNumber("PI_BRIDGE_QUEUE_DEPTH", 64, 1);
+  const refillPerMinute = envNumber("PI_BRIDGE_RATE_PER_MIN", 20, MIN_RATE_PER_MIN);
+  const burst = envNumber("PI_BRIDGE_RATE_BURST", 6, MIN_RATE_BURST);
+  const refillInterruptPerMinute = envNumber("PI_BRIDGE_INTERRUPT_RATE_PER_MIN", 20, MIN_INTERRUPT_RATE_PER_MIN);
+  const burstInterrupt = envNumber("PI_BRIDGE_INTERRUPT_RATE_BURST", 4, MIN_INTERRUPT_RATE_BURST);
+  const queueDepthLimit = envNumber("PI_BRIDGE_QUEUE_DEPTH", 64, MIN_QUEUE_DEPTH);
 
   ensureDirSecure(baseDir);
   ensureDirSecure(registryDir);
@@ -70,6 +77,7 @@ export default function (pi) {
 
   const normalLimiter = makeTokenBucket({ refillPerMinute, burst });
   const interruptLimiter = makeTokenBucket({ refillPerMinute: refillInterruptPerMinute, burst: burstInterrupt });
+  const maxPerDrain = envNumber("PI_BRIDGE_MAX_PER_DRAIN", 8, 1);
   const processed = new Map();
 
   let heartbeat = undefined;
@@ -151,9 +159,10 @@ export default function (pi) {
     const delivery = normalizeDelivery(envelope.delivery, isIdle);
 
     const limiter = delivery.mode === "interrupt" ? interruptLimiter : normalLimiter;
-    if (!limiter.allow(1)) {
-      return { ok: false, error: "bridge_rate_limited", delivery };
-    }
+
+    // Soft throttle only: never reject here. Queue depth + per-drain cap provide
+    // DoS protection without surfacing bridge_rate_limited to users.
+    limiter.allow(1);
 
     try {
       if (delivery.sendUserMessageOptions) {
@@ -166,7 +175,6 @@ export default function (pi) {
       const raw = error instanceof Error ? error.message : "send_failed";
       const lower = String(raw || "").toLowerCase();
       if (lower.includes("rate") && lower.includes("limit")) {
-        limiter.refund?.(1);
         return { ok: false, error: "pi_rate_limited", delivery };
       }
       return { ok: false, error: raw, delivery };
@@ -233,7 +241,10 @@ export default function (pi) {
         }
       }
 
-      for (const name of entries.slice(-queueDepthLimit)) {
+      const kept = entries.slice(-queueDepthLimit);
+      const toProcess = kept.slice(0, maxPerDrain);
+
+      for (const name of toProcess) {
         processOneFile(name, ctx);
       }
     } finally {

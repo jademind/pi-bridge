@@ -95,15 +95,15 @@ Possible statuses:
 
 ## Runtime config
 
-- `PI_BRIDGE_MAX_TEXT` (default `4000`)
+- `PI_BRIDGE_MAX_TEXT` (default `4000`, minimum `256`)
 - `PI_BRIDGE_MAX_SKEW_MS` (default `120000`)
 - `PI_BRIDGE_HEARTBEAT_MS` (default `2000`)
 - `PI_BRIDGE_SCAN_MS` (default `750`)
-- `PI_BRIDGE_QUEUE_DEPTH` (default `64`)
-- `PI_BRIDGE_RATE_PER_MIN` (default `12`)
-- `PI_BRIDGE_RATE_BURST` (default `4`)
-- `PI_BRIDGE_INTERRUPT_RATE_PER_MIN` (default `4`)
-- `PI_BRIDGE_INTERRUPT_RATE_BURST` (default `2`)
+- `PI_BRIDGE_QUEUE_DEPTH` (default `64`, minimum `8`)
+- `PI_BRIDGE_RATE_PER_MIN` (default `20`, minimum `20`)
+- `PI_BRIDGE_RATE_BURST` (default `6`, minimum `4`)
+- `PI_BRIDGE_INTERRUPT_RATE_PER_MIN` (default `20`, minimum `20`)
+- `PI_BRIDGE_INTERRUPT_RATE_BURST` (default `4`, minimum `4`)
 
 ## Command
 
