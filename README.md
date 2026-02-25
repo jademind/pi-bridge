@@ -6,6 +6,16 @@ Minimal secure inbox bridge for Pi sessions.
 
 `@jademind/pi-bridge` is designed for status bar and mobile clients that must send messages reliably to running Pi agents, including plain terminal sessions where tty injection is unreliable.
 
+It is primarily consumed by the free open-source macOS app [`pi-statusbar`](https://github.com/jademind/pi-statusbar), and complements [`@jademind/pi-telemetry`](https://github.com/jademind/pi-telemetry) for runtime observability.
+
+---
+
+## Related projects
+
+- [`pi-statusbar`](https://github.com/jademind/pi-statusbar): macOS menu bar app for Pi (daemon + UI)
+- [`@jademind/pi-telemetry`](https://github.com/jademind/pi-telemetry): per-process telemetry heartbeat + snapshot CLI
+- [`@jademind/pi-visual`](https://github.com/jademind/pi-visual): visual/session integration package
+
 ## What it does
 
 - Watches a per-PID inbox directory
@@ -21,6 +31,15 @@ Minimal secure inbox bridge for Pi sessions.
 
 ```bash
 pi install npm:@jademind/pi-bridge
+```
+
+Restart active Pi sessions after install so the extension loads.
+
+If you use `pi-statusbar`, install/start everything with:
+
+```bash
+brew install jademind/tap/pi-statusbar
+statusbar-setup enable
 ```
 
 ## Filesystem layout
@@ -116,12 +135,22 @@ npm test
 npm pack --dry-run
 ```
 
+Suggested release checklist:
+
+1. Update version in `package.json`
+2. Run tests (`npm test`)
+3. Validate package tarball (`npm pack --dry-run`)
+4. Tag and push release commit
+5. Publish to npm (`npm publish --access public`)
+
 ## OSS best practices
 
+- Keep package references scoped in docs/examples (`@jademind/pi-bridge`, `@jademind/pi-telemetry`).
 - Keep bridge inbox/ack directories user-local (`~/.pi/agent/statusbridge`) and avoid world-writable permissions.
 - Treat all inbox payloads as untrusted: validate PID, TTL, size, and path constraints before delivery.
 - Keep rate limits enabled (normal + interrupt) to protect active sessions from spam and accidental loops.
 - When changing envelope/ack schema, bump docs with explicit compatibility notes.
+- Keep release notes aligned across npm package, Git tag, and dependent clients (status bar / mobile).
 
 ## License
 
